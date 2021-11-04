@@ -1,4 +1,6 @@
 <script context="module">
+  import Card from '../Card.svelte';
+
   export async function load({ fetch }) {
     const res = await fetch('https://api.spacex.land/graphql', {
       method: 'POST',
@@ -7,13 +9,17 @@
       },
       body: JSON.stringify({
         query: `{
-            launchesPast(limit: 10) {
-                mission_name
-                launch_date_local
-                links {
-                    video_link
-                }
+          launchesUpcoming(limit: 10, order: "launch_date_utc") {
+            details
+            launch_site {
+              site_name_long
             }
+            mission_name
+            rocket {
+              rocket_name
+            }
+            launch_date_local
+          }
         }`
       })
     });
@@ -22,7 +28,7 @@
       const { data } = await res.json();
       return {
         props: {
-          launches: data.launchesPast
+          launches: data.launchesUpcoming
         }
       };
     }
@@ -38,7 +44,7 @@
   export let launches;
 </script>
 
-<h1>SpaceX Launches</h1>
+<h1>Upcoming SpaceX Launches</h1>
 <p>
   This is an example <a
     class="link"
@@ -62,17 +68,7 @@
 </p>
 <ul>
   {#each launches as launch}
-    <li>
-      <a
-        class="card-link"
-        target="_blank"
-        rel="noopener"
-        href={launch.links.video_link}
-      >
-        <h2>{launch.mission_name}</h2>
-        <p>{new Date(launch.launch_date_local).toLocaleString()}</p>
-      </a>
-    </li>
+    <Card mission_name={launch.mission_name} site_name_long={launch.launch_site.site_name_long} rocket_name={launch.rocket.rocket_name} details={launch.details} launch_date_local={launch.launch_date_local}/>
   {/each}
 </ul>
 <footer>
@@ -102,37 +98,17 @@
   h1 {
     letter-spacing: -0.025em;
   }
-  h2 {
-    font-size: 18px;
-  }
   ul {
     list-style: none;
     padding: 0;
     margin-top: 32px;
   }
-  li {
-    border: 1px solid #eaeaea;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    background-color: white;
-    transition: 0.15s box-shadow ease-in-out;
-  }
-  li:hover {
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.12);
-  }
-  p {
-    color: #666;
-    font-size: 14px;
-    line-height: 1.75;
-  }
+
   a {
     color: #0070f3;
     text-decoration: none;
   }
-  .card-link {
-    padding: 8px 24px;
-    display: block;
-  }
+
   .link {
     transition: 0.15s text-decoration ease-in-out;
     color: #0761d1;
